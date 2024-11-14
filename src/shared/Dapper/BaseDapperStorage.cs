@@ -2,11 +2,20 @@ namespace SharedContracts.Dapper;
 
 public abstract class BaseDapperStorage(ILogger<IDataStorage> logger, PostgresConfiguration configuration)
 {
+    private NpgsqlConnection CreateNpgsqlConnection()
+    {
+        var connectionStringBuilder = new NpgsqlConnectionStringBuilder(configuration.StorageConnectionString)
+        {
+            CommandTimeout = 3000,
+        };
+
+        return new(connectionStringBuilder.ConnectionString);
+    }
     protected async Task ExecuteCommandAsync(Func<NpgsqlConnection, Task> operation, string errorMessage, CancellationToken cancellationToken = default)
     {
         try
         {
-            await using var connection = new NpgsqlConnection(configuration.StorageConnectionString);
+            await using var connection = CreateNpgsqlConnection();
             await connection.OpenAsync(cancellationToken);
 
             await operation(connection);
@@ -21,7 +30,7 @@ public abstract class BaseDapperStorage(ILogger<IDataStorage> logger, PostgresCo
     {
         try
         {
-            await using var connection = new NpgsqlConnection(configuration.StorageConnectionString);
+            await using var connection = CreateNpgsqlConnection();
             await connection.OpenAsync(cancellationToken);
 
             var result = await operation(connection);
@@ -38,7 +47,7 @@ public abstract class BaseDapperStorage(ILogger<IDataStorage> logger, PostgresCo
     {
         try
         {
-            await using var connection = new NpgsqlConnection(configuration.StorageConnectionString);
+            await using var connection = CreateNpgsqlConnection();
             await connection.OpenAsync(cancellationToken);
 
             var result = await operation(connection);

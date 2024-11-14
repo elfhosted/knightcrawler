@@ -37,7 +37,12 @@ public class DapperDataStorage(PostgresConfiguration configuration, ILogger<Dapp
 
     private async Task<NpgsqlConnection> CreateAndOpenConnection(CancellationToken cancellationToken = default)
     {
-        var connection = new NpgsqlConnection(configuration.StorageConnectionString);
+        var connectionStringBuilder = new NpgsqlConnectionStringBuilder(configuration.StorageConnectionString)
+        {
+            CommandTimeout = 3000,
+        };
+
+        var connection = new NpgsqlConnection(connectionStringBuilder.ConnectionString);
         await connection.OpenAsync(cancellationToken);
         return connection;
     }
